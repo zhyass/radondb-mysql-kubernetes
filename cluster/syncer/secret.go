@@ -72,7 +72,13 @@ func NewSecretSyncer(cli client.Client, c *cluster.Cluster) syncer.Interface {
 			return err
 		}
 
-		secret.Data["root-password"] = []byte(c.Spec.MysqlOpts.RootPassword)
+		if c.Spec.MysqlOpts.RootHost == "%" && c.Spec.MysqlOpts.RootPassword == "" {
+			if err := addRandomPassword(secret.Data, "root-password"); err != nil {
+				return err
+			}
+		} else {
+			secret.Data["root-password"] = []byte(c.Spec.MysqlOpts.RootPassword)
+		}
 
 		secret.Data["mysql-user"] = []byte(c.Spec.MysqlOpts.User)
 		secret.Data["mysql-password"] = []byte(c.Spec.MysqlOpts.Password)
